@@ -19,9 +19,11 @@ dihitung ulang oleh `NotaService::recalc` saat nota berubah.
    `withCount('nota')` / `withSum('nota','nominal')` di query Index. Satu-satunya
    field denormalisasi = `status_spj` (demi filter cepat). Konsisten dgn SaldoService.
 2. **recalc extensible.** `status_spj` di Phase 2 hanya mempertimbangkan nota
-   (`kembalian_total = 0`). Rancang `recalc` agar SUDAH membaca komponen
-   pengembalian (kini 0, diperluas di Phase 3) — Phase 3 cuma menambah sumber
-   angka, BUKAN ubah signature.
+   (`kembalian_total = 0`). Sumber `0` dari **method privat**, BUKAN relasi —
+   `kembalianTotal(TransaksiKas $t): int { return 0; }`. Phase 3 cuma mengganti
+   isi method jadi `$t->pengembalian()->sum(...)`; signature `recalc` & seluruh
+   pemanggil tak tersentuh, dan 2.2 hijau tanpa artefak Phase 3 (tabel/relasi
+   pengembalian belum ada di Phase 2).
 3. **Kompresi server-side via queue** (Intervention Image), **PDF pass-through**.
    Satu jalur file. (Flip ke klien hanya bila bandwidth wifi jadi masalah nyata.)
 
@@ -62,8 +64,9 @@ mobile-first (tap ≥44px).
 
 ### 2.2 — NotaService::recalc → status_spj (LOGIKA UANG, wajib test)
 - `recalc(TransaksiKas $t): void`. Hitung:
-  `nota_total = Σ nota.nominal`; `kembalian_total = 0` (placeholder Phase 3,
-  baca dari relasi anak pengembalian yg kini kosong).
+  `nota_total = Σ nota.nominal`; `kembalian_total = kembalianTotal($t)` di mana
+  `private kembalianTotal(TransaksiKas $t): int { return 0; }` (Phase 3 ganti isi
+  method ini saja — JANGAN sentuh relasi/tabel pengembalian di Phase 2).
   `target = $t->kredit` (nilai belanja). `status = (nota_total + kembalian_total)
   >= target ? Lunas : Belum`. Simpan hanya `status_spj`.
 - Panggil recalc setelah nota ditambah/diubah/dihapus.
