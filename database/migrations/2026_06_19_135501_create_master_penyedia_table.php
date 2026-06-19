@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
 
             $table->string('nama')->unique()->comment('Nama penyedia; pencocokan case-insensitive di service');
+            $table->string('nama_normal')->storedAs('lower(nama)')->unique()
+                ->comment('Kolom turunan lower(nama): jaminan dedup case-insensitive di level DB');
             $table->string('npwp')->nullable();
             $table->text('alamat')->nullable();
 

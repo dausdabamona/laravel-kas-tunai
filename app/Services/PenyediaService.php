@@ -26,7 +26,7 @@ class PenyediaService
 
         return DB::transaction(function () use ($nama, $npwp, $alamat) {
             $penyedia = MasterPenyedia::query()
-                ->whereRaw('LOWER(nama) = ?', [mb_strtolower($nama)])
+                ->where('nama_normal', mb_strtolower($nama))
                 ->lockForUpdate()
                 ->first();
 

@@ -2,9 +2,19 @@
 
 use App\Models\MasterPenyedia;
 use App\Services\PenyediaService;
+use Illuminate\Database\QueryException;
 
 beforeEach(function () {
     $this->penyedia = app(PenyediaService::class);
+});
+
+it('unique nama_normal mencegah duplikat lintas-kapitalisasi di level DB (bypass service)', function () {
+    MasterPenyedia::create(['nama' => 'CV Maju']);
+
+    // Insert langsung baris kedua beda kapitalisasi: lolos unique(nama) exact-case
+    // tetapi DITOLAK oleh unique(nama_normal) = lower(nama).
+    expect(fn () => MasterPenyedia::create(['nama' => 'cv maju']))
+        ->toThrow(QueryException::class);
 });
 
 it('membuat penyedia baru dengan frekuensi 1 dan terakhir_digunakan terisi', function () {
