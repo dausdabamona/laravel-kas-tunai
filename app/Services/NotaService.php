@@ -30,12 +30,11 @@ class NotaService
     /**
      * Total pengembalian yang mengurangi beban SPJ.
      *
-     * LOCK Phase 3: ganti SATU baris ini saja menjadi
-     *   return (int) $t->pengembalian()->sum('jumlah');
-     * Signature recalc & seluruh pemanggil tidak tersentuh.
+     * LOCK Phase 3 DITEBUS: kini membaca relasi pengembalian sungguhan
+     * (sebelumnya return 0 di Phase 2). Signature recalc & pemanggil tak berubah.
      */
     private function kembalianTotal(TransaksiKas $t): int
     {
-        return 0;
+        return (int) $t->pengembalian()->sum('jumlah');
     }
 }

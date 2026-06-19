@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Enums\Role;
 use App\Models\Lampiran;
 use App\Models\MultiNota;
+use App\Models\Pengembalian;
 use App\Models\TransaksiKas;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -37,6 +38,7 @@ class AppServiceProvider extends ServiceProvider
             'transaksi' => TransaksiKas::class,
             'nota' => MultiNota::class,
             'lampiran' => Lampiran::class,
+            'pengembalian' => Pengembalian::class,
             'user' => User::class,
         ]);
 

@@ -128,6 +128,11 @@ class TransaksiKas extends Model
         return $this->morphMany(Lampiran::class, 'attachable');
     }
 
+    public function pengembalian(): HasMany
+    {
+        return $this->hasMany(Pengembalian::class, 'transaksi_id');
+    }
+
     public function dibuatOleh(): BelongsTo
     {
         return $this->belongsTo(User::class, 'dibuat_oleh');
