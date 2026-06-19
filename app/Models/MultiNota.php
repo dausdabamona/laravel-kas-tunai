@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\HasMicrosecondTimestamps;
 use App\Services\NotaService;
 use Database\Factories\MultiNotaFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,19 +20,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class MultiNota extends Model
 {
     /** @use HasFactory<MultiNotaFactory> */
-    use Auditable, HasFactory;
+    use Auditable, HasFactory, HasMicrosecondTimestamps;
 
     protected $table = 'multi_nota';
-
-    /**
-     * Simpan timestamp dengan presisi mikrodetik.
-     *
-     * Penting untuk cascade restore selektif: deleted_at hapus-manual harus
-     * berbeda dari deleted_at cascade (yang menyalin timestamp induk presisi
-     * detik). Tanpa ini Eloquent menulis 'Y-m-d H:i:s' (detik) dan dua
-     * penghapusan dalam detik sama akan bertabrakan.
-     */
-    protected $dateFormat = 'Y-m-d H:i:s.u';
 
     protected $fillable = [
         'transaksi_id',

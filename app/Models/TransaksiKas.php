@@ -6,6 +6,8 @@ use App\Enums\JenisTransaksi;
 use App\Enums\StatusSpj;
 use App\Enums\Sumber;
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\CascadesSoftDeletes;
+use App\Models\Concerns\HasMicrosecondTimestamps;
 use Database\Factories\TransaksiKasFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 class TransaksiKas extends Model
 {
     /** @use HasFactory<TransaksiKasFactory> */
-    use Auditable, HasFactory;
+    use Auditable, CascadesSoftDeletes, HasFactory, HasMicrosecondTimestamps;
 
     protected $table = 'transaksi_kas';
 
@@ -69,26 +71,16 @@ class TransaksiKas extends Model
                 $model->dibuat_oleh = auth()->id();
             }
         });
+    }
 
-        // Cascade soft-delete ke nota anak. Pakai event "deleted" (deleted_at induk
-        // SUDAH terisi), dan set anak ke timestamp induk PERSIS agar restore selektif.
-        static::deleted(function (self $t) {
-            if ($t->isForceDeleting()) {
-                return;
-            }
-
-            $t->nota()->whereNull('deleted_at')
-                ->update(['deleted_at' => $t->deleted_at]);
-        });
-
-        // Restore HANYA anak yang ikut terhapus oleh cascade (deleted_at == induk).
-        // Nota yang dihapus manual lebih dulu punya timestamp beda -> tetap terhapus.
-        static::restoring(function (self $t) {
-            $ts = $t->deleted_at;
-
-            $t->nota()->onlyTrashed()->where('deleted_at', $ts)
-                ->update(['deleted_at' => null]);
-        });
+    /**
+     * Relasi yang ikut cascade soft-delete. 'lampiran' menyusul di slice 2.3.
+     *
+     * @return list<string>
+     */
+    protected function cascadeRelations(): array
+    {
+        return ['nota'];
     }
 
     /**
