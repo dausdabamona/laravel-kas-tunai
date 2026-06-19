@@ -123,13 +123,13 @@ it('recalc memakai updateQuietly: tidak menambah entri audit di transaksi', func
         'status_spj' => StatusSpj::Belum,
     ]);
 
-    $auditTransaksiAwal = Activity::where('subject_type', TransaksiKas::class)
-        ->where('subject_id', $t->id)->count();
+    // forSubject() aman terhadap morph map (alias 'transaksi') -> asersi sungguhan.
+    $auditTransaksiAwal = Activity::forSubject($t)->count();
 
     MultiNota::factory()->create(['transaksi_id' => $t->id, 'nominal' => 1_000_000]);
 
     expect($t->fresh()->status_spj)->toBe(StatusSpj::Lunas)
-        ->and(Activity::where('subject_type', TransaksiKas::class)->where('subject_id', $t->id)->count())
+        ->and(Activity::forSubject($t)->count())
         ->toBe($auditTransaksiAwal); // status berubah lewat recalc TANPA log baru
 });
 

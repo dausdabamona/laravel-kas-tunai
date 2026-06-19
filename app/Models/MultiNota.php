@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\CascadesSoftDeletes;
 use App\Models\Concerns\HasMicrosecondTimestamps;
 use App\Services\NotaService;
 use Database\Factories\MultiNotaFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
  * Rincian nota per penyedia untuk satu transaksi belanja.
@@ -20,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class MultiNota extends Model
 {
     /** @use HasFactory<MultiNotaFactory> */
-    use Auditable, HasFactory, HasMicrosecondTimestamps;
+    use Auditable, CascadesSoftDeletes, HasFactory, HasMicrosecondTimestamps;
 
     protected $table = 'multi_nota';
 
@@ -56,6 +58,16 @@ class MultiNota extends Model
         static::restored($recalc);
     }
 
+    /**
+     * Lampiran (foto_nota) ikut cascade saat nota dihapus/di-restore.
+     *
+     * @return list<string>
+     */
+    protected function cascadeRelations(): array
+    {
+        return ['lampiran'];
+    }
+
     public function transaksi(): BelongsTo
     {
         return $this->belongsTo(TransaksiKas::class, 'transaksi_id');
@@ -64,5 +76,10 @@ class MultiNota extends Model
     public function masterPenyedia(): BelongsTo
     {
         return $this->belongsTo(MasterPenyedia::class, 'penyedia_id');
+    }
+
+    public function lampiran(): MorphMany
+    {
+        return $this->morphMany(Lampiran::class, 'attachable');
     }
 }

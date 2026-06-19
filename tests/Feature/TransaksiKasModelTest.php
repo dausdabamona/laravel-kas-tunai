@@ -59,9 +59,8 @@ it('mencatat aktivitas saat dibuat dan diperbarui', function () {
 
     $trx->update(['kegiatan' => 'Pembelian ATK dan Tinta']);
 
-    $logs = Activity::whereSubjectType(TransaksiKas::class)
-        ->whereSubjectId($trx->id)
-        ->get();
+    // forSubject() memakai getMorphClass() -> aman terhadap morph map (alias 'transaksi').
+    $logs = Activity::forSubject($trx)->get();
 
     expect($logs)->toHaveCount(2);
 });

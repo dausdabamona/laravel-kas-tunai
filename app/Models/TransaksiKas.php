@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Facades\DB;
 
 class TransaksiKas extends Model
@@ -74,13 +75,17 @@ class TransaksiKas extends Model
     }
 
     /**
-     * Relasi yang ikut cascade soft-delete. 'lampiran' menyusul di slice 2.3.
+     * Relasi yang ikut cascade soft-delete.
+     *
+     * Keputusan (b): cascade hanya menjangkau nota anak + lampiran LANGSUNG
+     * transaksi. Lampiran nota (foto_nota cucu) TIDAK ikut — cascade nota lewat
+     * bulk update yang tak memicu event, jadi foto_nota tetap aktif.
      *
      * @return list<string>
      */
     protected function cascadeRelations(): array
     {
-        return ['nota'];
+        return ['nota', 'lampiran'];
     }
 
     /**
@@ -116,6 +121,11 @@ class TransaksiKas extends Model
     public function nota(): HasMany
     {
         return $this->hasMany(MultiNota::class, 'transaksi_id');
+    }
+
+    public function lampiran(): MorphMany
+    {
+        return $this->morphMany(Lampiran::class, 'attachable');
     }
 
     public function dibuatOleh(): BelongsTo

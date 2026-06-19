@@ -96,9 +96,8 @@ it('create, update, dan delete nota masing-masing tercatat satu entri audit', fu
     $nota->update(['nama_penyedia' => 'Nama Berubah']); // updated
     $nota->delete();                                // deleted (soft)
 
-    $logs = Activity::where('subject_type', MultiNota::class)
-        ->where('subject_id', $nota->id)
-        ->get();
+    // forSubject() aman terhadap morph map (alias 'nota'), bukan FQCN.
+    $logs = Activity::forSubject($nota)->get();
 
     expect($logs)->toHaveCount(3)
         ->and($logs->pluck('description')->all())->toBe(['created', 'updated', 'deleted']);
