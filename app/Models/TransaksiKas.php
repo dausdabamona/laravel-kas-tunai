@@ -72,6 +72,31 @@ class TransaksiKas extends Model
                 $model->dibuat_oleh = auth()->id();
             }
         });
+
+        // Cascade pasangan pindah_dana (ref_group sama) agar buku tak timpang.
+        // Beda GAS yang menghapus per-baris. BULK -> hindari rekursi event.
+        static::deleted(function (self $t) {
+            if ($t->isForceDeleting() || $t->jenis !== JenisTransaksi::PindahDana || ! $t->ref_group) {
+                return;
+            }
+
+            static::where('ref_group', $t->ref_group)
+                ->whereKeyNot($t->id)
+                ->whereNull('deleted_at')
+                ->update(['deleted_at' => $t->deleted_at]);
+        });
+
+        static::restoring(function (self $t) {
+            if ($t->jenis !== JenisTransaksi::PindahDana || ! $t->ref_group) {
+                return;
+            }
+
+            static::withTrashed()
+                ->where('ref_group', $t->ref_group)
+                ->whereKeyNot($t->id)
+                ->where('deleted_at', $t->deleted_at)
+                ->update(['deleted_at' => null]);
+        });
     }
 
     /**

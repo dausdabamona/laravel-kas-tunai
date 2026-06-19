@@ -46,6 +46,7 @@ enum Role: string
             self::Bendahara => [
                 'input-transaksi',
                 'verifikasi-transaksi',
+                'pindah-dana',
                 'lihat-laporan',
             ],
             self::Ppk => [
