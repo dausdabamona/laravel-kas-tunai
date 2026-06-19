@@ -4,6 +4,7 @@ use App\Enums\JenisTransaksi;
 use App\Enums\StatusSpj;
 use App\Enums\Sumber;
 use App\Models\TransaksiKas;
+use App\Models\User;
 use Spatie\Activitylog\Models\Activity;
 
 it('dapat dibuat dengan atribut lengkap dan di-cast ke enum', function () {
@@ -102,4 +103,31 @@ it('keterangan boleh kosong (null) untuk transaksi manual biasa', function () {
     $trx = TransaksiKas::factory()->create(['keterangan' => null]);
 
     expect($trx->fresh()->keterangan)->toBeNull();
+});
+
+it('mencatat dibuat_oleh otomatis dari pengguna terautentikasi', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $trx = TransaksiKas::factory()->create();
+
+    expect($trx->fresh()->dibuat_oleh)->toBe($user->id)
+        ->and($trx->load('dibuatOleh')->dibuatOleh->is($user))->toBeTrue();
+});
+
+it('dibuat_oleh null untuk baris sistem (mis. impor bank) saat tanpa autentikasi', function () {
+    $trx = TransaksiKas::factory()->create(['dibuat_oleh' => null]);
+
+    expect($trx->fresh()->dibuat_oleh)->toBeNull();
+});
+
+it('dibuat_oleh eksplisit tidak ditimpa oleh pengguna terautentikasi', function () {
+    $penginput = User::factory()->create();
+    $aktorLain = User::factory()->create();
+    $this->actingAs($aktorLain);
+
+    // Baris dibuat atas nama penginput tertentu (mis. service Phase 3)
+    $trx = TransaksiKas::factory()->create(['dibuat_oleh' => $penginput->id]);
+
+    expect($trx->fresh()->dibuat_oleh)->toBe($penginput->id);
 });

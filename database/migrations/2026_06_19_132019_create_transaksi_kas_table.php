@@ -48,6 +48,12 @@ return new class extends Migration
             $table->bigInteger('nilai_spby')->nullable()->unsigned();
             $table->bigInteger('uang_diserahkan')->nullable()->unsigned();
 
+            $table->foreignId('dibuat_oleh')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete()
+                ->comment('Akuntabilitas: pengguna penginput. Null = baris sistem (mis. impor bank)');
+
             $table->timestamps();
             $table->softDeletes();
 

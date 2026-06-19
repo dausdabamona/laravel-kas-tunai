@@ -38,6 +38,7 @@ class TransaksiKas extends Model
         'tgl_spby',
         'nilai_spby',
         'uang_diserahkan',
+        'dibuat_oleh',
     ];
 
     protected function casts(): array
@@ -60,6 +61,12 @@ class TransaksiKas extends Model
         static::creating(function (self $model) {
             if (empty($model->no)) {
                 $model->no = self::generateNomor($model->tanggal?->year ?? now()->year);
+            }
+
+            // Akuntabilitas: catat penginput bila belum diisi eksplisit.
+            // Baris sistem (mis. impor bank) boleh mengeset null secara sengaja.
+            if (! $model->isDirty('dibuat_oleh') && auth()->check()) {
+                $model->dibuat_oleh = auth()->id();
             }
         });
     }
@@ -92,6 +99,11 @@ class TransaksiKas extends Model
     public function anak(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id');
+    }
+
+    public function dibuatOleh(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'dibuat_oleh');
     }
 
     // ── Scope ───────────────────────────────────────────────────────────────
