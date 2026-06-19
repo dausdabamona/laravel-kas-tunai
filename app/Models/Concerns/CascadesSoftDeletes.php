@@ -2,6 +2,8 @@
 
 namespace App\Models\Concerns;
 
+use App\Support\Cascade;
+
 /**
  * Cascade soft-delete dengan timestamp-matching untuk restore selektif.
  *
@@ -13,8 +15,7 @@ namespace App\Models\Concerns;
  * Mensyaratkan presisi mikrodetik pada anak (lihat HasMicrosecondTimestamps)
  * agar hapus-manual & cascade tak berbagi timestamp detik yang sama.
  *
- * Bulk update di sini sengaja MELEWATI event model anak (tak ada audit/recalc
- * untuk perubahan cascade) — konsisten dengan keputusan jaga-log-sunyi.
+ * Mekanisme bulk timestamp-match dipusatkan di App\Support\Cascade.
  */
 trait CascadesSoftDeletes
 {
@@ -34,18 +35,14 @@ trait CascadesSoftDeletes
             }
 
             foreach ($model->cascadeRelations() as $rel) {
-                $model->{$rel}()->whereNull('deleted_at')
-                    ->update(['deleted_at' => $model->deleted_at]);
+                Cascade::softDelete($model->{$rel}(), $model->deleted_at);
             }
         });
 
         // restoring: deleted_at induk masih terisi (restore() mennull-kannya setelah event ini).
         static::restoring(function ($model) {
-            $ts = $model->deleted_at;
-
             foreach ($model->cascadeRelations() as $rel) {
-                $model->{$rel}()->onlyTrashed()->where('deleted_at', $ts)
-                    ->update(['deleted_at' => null]);
+                Cascade::restore($model->{$rel}(), $model->deleted_at);
             }
         });
     }

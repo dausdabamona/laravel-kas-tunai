@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\HasMicrosecondTimestamps;
 use App\Services\NotaService;
+use App\Support\Cascade;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -46,25 +47,17 @@ class Pengembalian extends Model
         static::saved($recalc);
 
         static::deleted(function (self $p) use ($recalc) {
-            // Cascade 1:1 ke baris masuk tertaut (BULK, timestamp-match) — tak memicu event.
+            // Cascade 1:1 ke baris masuk tertaut (timestamp-match) — tak memicu event.
             if (! $p->isForceDeleting() && $p->ref_masuk_id) {
-                TransaksiKas::whereKey($p->ref_masuk_id)
-                    ->whereNull('deleted_at')
-                    ->update(['deleted_at' => $p->deleted_at]);
+                Cascade::softDelete(TransaksiKas::whereKey($p->ref_masuk_id), $p->deleted_at);
             }
 
             $recalc($p);
         });
 
         static::restoring(function (self $p) {
-            $ts = $p->deleted_at;
-
             if ($p->ref_masuk_id) {
-                // withTrashed(): baris masuk sedang ter-soft-delete, harus lolos global scope.
-                TransaksiKas::withTrashed()
-                    ->whereKey($p->ref_masuk_id)
-                    ->where('deleted_at', $ts)
-                    ->update(['deleted_at' => null]);
+                Cascade::restore(TransaksiKas::whereKey($p->ref_masuk_id), $p->deleted_at);
             }
         });
 

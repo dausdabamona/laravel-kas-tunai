@@ -8,6 +8,7 @@ use App\Enums\Sumber;
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\CascadesSoftDeletes;
 use App\Models\Concerns\HasMicrosecondTimestamps;
+use App\Support\Cascade;
 use Database\Factories\TransaksiKasFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -74,16 +75,16 @@ class TransaksiKas extends Model
         });
 
         // Cascade pasangan pindah_dana (ref_group sama) agar buku tak timpang.
-        // Beda GAS yang menghapus per-baris. BULK -> hindari rekursi event.
+        // Beda GAS yang menghapus per-baris.
         static::deleted(function (self $t) {
             if ($t->isForceDeleting() || $t->jenis !== JenisTransaksi::PindahDana || ! $t->ref_group) {
                 return;
             }
 
-            static::where('ref_group', $t->ref_group)
-                ->whereKeyNot($t->id)
-                ->whereNull('deleted_at')
-                ->update(['deleted_at' => $t->deleted_at]);
+            Cascade::softDelete(
+                static::where('ref_group', $t->ref_group)->whereKeyNot($t->id),
+                $t->deleted_at,
+            );
         });
 
         static::restoring(function (self $t) {
@@ -91,11 +92,10 @@ class TransaksiKas extends Model
                 return;
             }
 
-            static::withTrashed()
-                ->where('ref_group', $t->ref_group)
-                ->whereKeyNot($t->id)
-                ->where('deleted_at', $t->deleted_at)
-                ->update(['deleted_at' => null]);
+            Cascade::restore(
+                static::where('ref_group', $t->ref_group)->whereKeyNot($t->id),
+                $t->deleted_at,
+            );
         });
     }
 
