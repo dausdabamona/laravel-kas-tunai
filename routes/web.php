@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CetakPerjalananController;
 use App\Http\Controllers\LampiranController;
 use App\Models\TransaksiKas;
 use Illuminate\Support\Facades\Route;
@@ -31,5 +32,14 @@ Route::get('/lampiran/{lampiran}/stream', [LampiranController::class, 'stream'])
 Route::get('/transaksi/{transaksi}/bukti-zip', [LampiranController::class, 'zipBukti'])
     ->middleware(['auth', 'signed'])
     ->name('lampiran.bukti-zip');
+
+// ── Cetak Perjalanan Dinas (Blade + window.print) ────────────────────────────
+Route::middleware('auth')->prefix('cetak/perjalanan/{suratTugas}')->name('cetak.pd.')->group(function () {
+    Route::get('surat-tugas', [CetakPerjalananController::class, 'suratTugas'])->name('surat-tugas');
+    Route::get('rincian', [CetakPerjalananController::class, 'rincian'])->name('rincian');
+    Route::get('spd', [CetakPerjalananController::class, 'spd'])->name('spd');
+    Route::get('pengesahan', [CetakPerjalananController::class, 'pengesahan'])->name('pengesahan');
+    Route::get('pengeluaran-riil', [CetakPerjalananController::class, 'pengeluaranRiil'])->name('pengeluaran-riil');
+});
 
 require __DIR__.'/auth.php';
