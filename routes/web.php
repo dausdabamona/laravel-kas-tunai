@@ -28,4 +28,8 @@ Route::get('/lampiran/{lampiran}/stream', [LampiranController::class, 'stream'])
     ->middleware(['auth', 'signed'])
     ->name('lampiran.stream');
 
+Route::get('/transaksi/{transaksi}/bukti-zip', [LampiranController::class, 'zipBukti'])
+    ->middleware(['auth', 'signed'])
+    ->name('lampiran.bukti-zip');
+
 require __DIR__.'/auth.php';
