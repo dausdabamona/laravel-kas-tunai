@@ -32,7 +32,7 @@ return new class extends Migration
                 ->comment('Tautan opsional ke master_penyedia');
 
             $table->timestamps();
-            $table->softDeletes();
+            $table->softDeletes('deleted_at', precision: 6);
 
             $table->index('transaksi_id');
         });

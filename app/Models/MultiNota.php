@@ -22,6 +22,16 @@ class MultiNota extends Model
 
     protected $table = 'multi_nota';
 
+    /**
+     * Simpan timestamp dengan presisi mikrodetik.
+     *
+     * Penting untuk cascade restore selektif: deleted_at hapus-manual harus
+     * berbeda dari deleted_at cascade (yang menyalin timestamp induk presisi
+     * detik). Tanpa ini Eloquent menulis 'Y-m-d H:i:s' (detik) dan dua
+     * penghapusan dalam detik sama akan bertabrakan.
+     */
+    protected $dateFormat = 'Y-m-d H:i:s.u';
+
     protected $fillable = [
         'transaksi_id',
         'urutan',

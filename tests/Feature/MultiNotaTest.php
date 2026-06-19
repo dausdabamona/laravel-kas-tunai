@@ -60,10 +60,9 @@ it('restore selektif: hanya nota cascade yang bangkit, nota terhapus manual teta
     $notaX = MultiNota::factory()->create(['transaksi_id' => $transaksi->id]);
     $notaY = MultiNota::factory()->create(['transaksi_id' => $transaksi->id]);
 
-    // X dihapus MANUAL lebih dulu, pada waktu berbeda dari induk
-    Carbon::setTestNow(now()->subMinutes(5));
+    // X dihapus MANUAL lebih dulu. TANPA jeda buatan: presisi mikrodetik
+    // memisahkan deleted_at X dari induk secara alami (logika prod yang menjaga).
     $notaX->delete();
-    Carbon::setTestNow();
 
     // Induk dihapus (cascade hapus Y dengan timestamp induk PERSIS)
     $transaksi->delete();
