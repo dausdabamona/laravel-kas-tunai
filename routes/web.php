@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LampiranController;
 use App\Models\TransaksiKas;
 use Illuminate\Support\Facades\Route;
 
@@ -21,5 +22,10 @@ Route::middleware(['auth'])->prefix('transaksi-kas')->name('transaksi-kas.')->gr
         return view('transaksi-kas.edit', compact('transaksi'));
     })->name('edit');
 });
+
+// ── Lampiran (stream privat via signed route) ────────────────────────────────
+Route::get('/lampiran/{lampiran}/stream', [LampiranController::class, 'stream'])
+    ->middleware(['auth', 'signed'])
+    ->name('lampiran.stream');
 
 require __DIR__.'/auth.php';
