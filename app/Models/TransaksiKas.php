@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Facades\DB;
 
@@ -74,10 +75,10 @@ class TransaksiKas extends Model
             }
         });
 
-        // Cascade pasangan pindah_dana (ref_group sama) agar buku tak timpang.
-        // Beda GAS yang menghapus per-baris.
+        // Cascade pasangan ber-ref_group (pindah dana & porsi PD) agar buku tak
+        // timpang. Beda GAS yang menghapus per-baris.
         static::deleted(function (self $t) {
-            if ($t->isForceDeleting() || $t->jenis !== JenisTransaksi::PindahDana || ! $t->ref_group) {
+            if ($t->isForceDeleting() || ! self::pasanganRefGroup($t)) {
                 return;
             }
 
@@ -88,7 +89,7 @@ class TransaksiKas extends Model
         });
 
         static::restoring(function (self $t) {
-            if ($t->jenis !== JenisTransaksi::PindahDana || ! $t->ref_group) {
+            if (! self::pasanganRefGroup($t)) {
                 return;
             }
 
@@ -110,7 +111,7 @@ class TransaksiKas extends Model
      */
     protected function cascadeRelations(): array
     {
-        return ['nota', 'lampiran'];
+        return ['nota', 'lampiran', 'suratTugas'];
     }
 
     /**
@@ -156,6 +157,23 @@ class TransaksiKas extends Model
     public function pengembalian(): HasMany
     {
         return $this->hasMany(Pengembalian::class, 'transaksi_id');
+    }
+
+    public function suratTugas(): HasOne
+    {
+        return $this->hasOne(SuratTugas::class, 'transaksi_id');
+    }
+
+    /**
+     * Apakah baris ini bagian dari pasangan ber-ref_group yang ikut cascade.
+     */
+    private static function pasanganRefGroup(self $t): bool
+    {
+        return $t->ref_group && in_array($t->jenis, [
+            JenisTransaksi::PindahDana,
+            JenisTransaksi::PdPokok,
+            JenisTransaksi::PdBendahara,
+        ], true);
     }
 
     public function dibuatOleh(): BelongsTo

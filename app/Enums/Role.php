@@ -48,11 +48,13 @@ enum Role: string
                 'verifikasi-transaksi',
                 'pindah-dana',
                 'impor-bank',
+                'perjalanan-dinas',
                 'lihat-laporan',
             ],
             self::Ppk => [
                 'setujui-spj',
                 'kelola-pengguna',
+                'perjalanan-dinas',
                 'lihat-laporan',
             ],
             self::Pimpinan => [
