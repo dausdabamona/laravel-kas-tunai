@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('no', 30)->unique()->comment('Nomor urut otomatis, mis. KAS-2026-0001');
             $table->date('tanggal');
             $table->string('kegiatan');
+            $table->text('keterangan')->nullable()
+                ->comment('Catatan/provenance: jejak asal-usul baris otomatis (retur/pindah/impor)');
             $table->string('penjab')->nullable()->comment('Penanggung jawab');
 
             $table->bigInteger('debet')->default(0)->unsigned()->comment('Penerimaan (Rp integer)');

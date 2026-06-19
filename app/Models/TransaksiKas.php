@@ -25,6 +25,7 @@ class TransaksiKas extends Model
         'no',
         'tanggal',
         'kegiatan',
+        'keterangan',
         'penjab',
         'debet',
         'kredit',

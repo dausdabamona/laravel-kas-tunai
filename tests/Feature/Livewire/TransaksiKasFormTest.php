@@ -80,6 +80,7 @@ it('memperbarui transaksi yang sudah ada saat mode edit', function () {
     $trx = TransaksiKas::factory()->create([
         'kegiatan' => 'Kegiatan Lama',
         'kredit' => 100_000,
+        'status_spj' => StatusSpj::Belum,
     ]);
 
     Livewire::test(Form::class, ['transaksiId' => $trx->id])

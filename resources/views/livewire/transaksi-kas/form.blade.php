@@ -25,6 +25,14 @@
             @error('kegiatan') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
         </div>
 
+        {{-- Keterangan --}}
+        <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm font-medium text-slate-700">Keterangan</label>
+            <textarea wire:model="keterangan" rows="2" placeholder="Catatan tambahan / jejak asal-usul (opsional)"
+                class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500 @error('keterangan') border-red-400 @enderror"></textarea>
+            @error('keterangan') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+        </div>
+
         {{-- Sumber --}}
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700">Sumber Dana <span class="text-red-500">*</span></label>

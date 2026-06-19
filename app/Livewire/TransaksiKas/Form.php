@@ -19,6 +19,8 @@ class Form extends Component
     #[Validate]
     public string $kegiatan = '';
 
+    public string $keterangan = '';
+
     public string $penjab = '';
 
     #[Validate]
@@ -49,6 +51,7 @@ class Form extends Component
         return [
             'tanggal' => ['required', 'date'],
             'kegiatan' => ['required', 'string', 'max:255'],
+            'keterangan' => ['nullable', 'string', 'max:1000'],
             'sumber' => ['required', 'in:'.implode(',', array_column(Sumber::cases(), 'value'))],
             'jenis' => ['required', 'in:'.implode(',', array_column(JenisTransaksi::cases(), 'value'))],
             'debet' => ['required', 'integer', 'min:0'],
@@ -78,6 +81,7 @@ class Form extends Component
             $trx = TransaksiKas::findOrFail($this->transaksiId);
             $this->tanggal = $trx->tanggal->format('Y-m-d');
             $this->kegiatan = $trx->kegiatan;
+            $this->keterangan = $trx->keterangan ?? '';
             $this->penjab = $trx->penjab ?? '';
             $this->sumber = $trx->sumber->value;
             $this->jenis = $trx->jenis->value;
@@ -93,22 +97,27 @@ class Form extends Component
 
     public function simpan(): void
     {
+        $trx = $this->transaksiId ? TransaksiKas::findOrFail($this->transaksiId) : null;
+
+        $this->authorize($trx ? 'update' : 'create', $trx ?? TransaksiKas::class);
+
         $data = $this->validate();
 
+        $data['keterangan'] = $this->keterangan ?: null;
         $data['penjab'] = $this->penjab ?: null;
         $data['no_spby'] = $this->no_spby ?: null;
         $data['tgl_spby'] = $this->tgl_spby ?: null;
         $data['nilai_spby'] = $this->nilai_spby ?: null;
         $data['uang_diserahkan'] = $this->uang_diserahkan ?: null;
 
-        if ($this->transaksiId) {
-            TransaksiKas::findOrFail($this->transaksiId)->update($data);
+        if ($trx) {
+            $trx->update($data);
         } else {
             TransaksiKas::create($data);
         }
 
         $this->dispatch('transaksi-tersimpan');
-        $this->reset(['kegiatan', 'penjab', 'debet', 'kredit', 'no_spby', 'tgl_spby', 'nilai_spby', 'uang_diserahkan']);
+        $this->reset(['kegiatan', 'keterangan', 'penjab', 'debet', 'kredit', 'no_spby', 'tgl_spby', 'nilai_spby', 'uang_diserahkan']);
     }
 
     public function render()

@@ -89,3 +89,17 @@ it('nominal tersimpan sebagai integer rupiah tanpa pembulatan desimal', function
     expect($trx->fresh()->debet)->toBe(1_234_567)
         ->and(gettype($trx->fresh()->debet))->toBe('integer');
 });
+
+it('menyimpan keterangan provenance untuk jejak asal-usul baris otomatis', function () {
+    $trx = TransaksiKas::factory()->create([
+        'keterangan' => 'Otomatis dari pengembalian No KAS-2026-0007',
+    ]);
+
+    expect($trx->fresh()->keterangan)->toBe('Otomatis dari pengembalian No KAS-2026-0007');
+});
+
+it('keterangan boleh kosong (null) untuk transaksi manual biasa', function () {
+    $trx = TransaksiKas::factory()->create(['keterangan' => null]);
+
+    expect($trx->fresh()->keterangan)->toBeNull();
+});

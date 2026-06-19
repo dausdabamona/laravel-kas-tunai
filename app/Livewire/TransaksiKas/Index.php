@@ -76,9 +76,10 @@ class Index extends Component
 
     public function hapus(int $id): void
     {
-        $this->authorize('input-transaksi');
+        $trx = TransaksiKas::findOrFail($id);
+        $this->authorize('delete', $trx);
 
-        TransaksiKas::findOrFail($id)->delete();
+        $trx->delete();
         $this->dispatch('transaksi-tersimpan');
     }
 
