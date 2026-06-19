@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use App\Services\NotaService;
 use Database\Factories\MultiNotaFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -49,6 +50,19 @@ class MultiNota extends Model
             'nominal' => 'integer',
             'tgl_nota' => 'date',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // Setiap nota berubah -> hitung ulang status_spj induk.
+        // Null-guard: bila induk ter-soft-delete/cascade, $n->transaksi null -> lewati.
+        // (Cascade nota lewat bulk update yang TIDAK memicu event ini — benar:
+        //  status induk hanya relevan saat induk aktif.)
+        $recalc = fn (self $n) => optional($n->transaksi, fn ($t) => app(NotaService::class)->recalc($t));
+
+        static::saved($recalc);
+        static::deleted($recalc);
+        static::restored($recalc);
     }
 
     public function transaksi(): BelongsTo
