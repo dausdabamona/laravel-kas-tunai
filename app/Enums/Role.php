@@ -47,6 +47,7 @@ enum Role: string
                 'input-transaksi',
                 'verifikasi-transaksi',
                 'pindah-dana',
+                'impor-bank',
                 'lihat-laporan',
             ],
             self::Ppk => [
