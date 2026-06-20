@@ -49,12 +49,14 @@ enum Role: string
                 'pindah-dana',
                 'impor-bank',
                 'perjalanan-dinas',
+                'kunci-periode',
                 'lihat-laporan',
             ],
             self::Ppk => [
                 'setujui-spj',
                 'kelola-pengguna',
                 'perjalanan-dinas',
+                'kunci-periode',
                 'lihat-laporan',
             ],
             self::Pimpinan => [

@@ -4,8 +4,8 @@ namespace App\Livewire;
 
 use App\Services\SaldoService;
 use App\Services\TransaksiService;
+use App\Support\Periode;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Support\Carbon;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -55,9 +55,7 @@ class PindahDana extends Component
 
     private function pastikanPeriodeTerbuka(string $tanggal): void
     {
-        $batas = config('kas.periode_terkunci_hingga');
-
-        if (! empty($batas) && Carbon::parse($tanggal)->lte(Carbon::parse($batas)->endOfDay())) {
+        if (Periode::terkunci($tanggal)) {
             throw new AuthorizationException('Periode terkunci: tidak dapat memindah dana pada periode ini.');
         }
     }

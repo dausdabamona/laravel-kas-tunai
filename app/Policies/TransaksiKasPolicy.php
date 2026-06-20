@@ -6,7 +6,7 @@ use App\Enums\Role;
 use App\Enums\StatusSpj;
 use App\Models\TransaksiKas;
 use App\Models\User;
-use Illuminate\Support\Carbon;
+use App\Support\Periode;
 
 /**
  * Kebijakan akses CRUD transaksi_kas.
@@ -82,18 +82,10 @@ class TransaksiKasPolicy
 
     /**
      * Apakah transaksi berada di periode yang terkunci.
-     *
-     * Penegakan minimal Fase 1: transaksi dengan tanggal <= batas terkunci
-     * tidak dapat diubah/dihapus. UI period-locking penuh menyusul di Fase 6.
+     * Sumber batas: App\Support\Periode (Pengaturan editable user).
      */
     protected function terkunci(TransaksiKas $transaksi): bool
     {
-        $batas = config('kas.periode_terkunci_hingga');
-
-        if (empty($batas)) {
-            return false;
-        }
-
-        return $transaksi->tanggal->lte(Carbon::parse($batas)->endOfDay());
+        return Periode::terkunci($transaksi->tanggal->format('Y-m-d'));
     }
 }

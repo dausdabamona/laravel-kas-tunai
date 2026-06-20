@@ -5,8 +5,8 @@ namespace App\Services;
 use App\Enums\JenisTransaksi;
 use App\Models\SuratTugas;
 use App\Models\TransaksiKas;
+use App\Support\Periode;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -94,9 +94,7 @@ class SuratTugasService
 
     private function pastikanPeriodeTerbuka(string $tanggal): void
     {
-        $batas = config('kas.periode_terkunci_hingga');
-
-        if (! empty($batas) && Carbon::parse($tanggal)->lte(Carbon::parse($batas)->endOfDay())) {
+        if (Periode::terkunci($tanggal)) {
             throw new AuthorizationException('Periode terkunci: tidak dapat membuat perjalanan dinas pada periode ini.');
         }
     }

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\JenisTransaksi;
 use App\Enums\Sumber;
 use App\Models\TransaksiKas;
+use App\Support\Periode;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -58,7 +59,6 @@ class ImporBankService
     {
         $ditambah = 0;
         $dilewati = 0;
-        $batas = config('kas.periode_terkunci_hingga');
 
         foreach ($baris as $b) {
             $masuk = (int) $b['kredit'];   // kredit rekening → uang masuk
@@ -68,7 +68,7 @@ class ImporBankService
                 continue; // baris tanpa nilai diabaikan (tidak dihitung)
             }
 
-            if (! empty($batas) && Carbon::parse($b['tanggal'])->lte(Carbon::parse($batas)->endOfDay())) {
+            if (Periode::terkunci($b['tanggal'])) {
                 $dilewati++;
 
                 continue; // jangan impor ke periode terkunci

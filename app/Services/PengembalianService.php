@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Enums\JenisTransaksi;
 use App\Models\Pengembalian;
 use App\Models\TransaksiKas;
+use App\Support\Periode;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 
 class PengembalianService
@@ -19,6 +21,10 @@ class PengembalianService
      */
     public function catat(TransaksiKas $induk, array $d): Pengembalian
     {
+        if (Periode::terkunci($d['tanggal'])) {
+            throw new AuthorizationException('Periode terkunci: tidak dapat mencatat pengembalian pada periode ini.');
+        }
+
         return DB::transaction(function () use ($induk, $d) {
             $pengembalian = Pengembalian::create([
                 'transaksi_id' => $induk->id,
