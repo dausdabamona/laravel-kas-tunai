@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\KategoriLampiran;
-use App\Jobs\ProsesLampiran;
 use App\Models\Lampiran;
 use App\Models\MultiNota;
 use App\Models\TransaksiKas;
@@ -9,7 +8,6 @@ use App\Models\User;
 use App\Services\LampiranService;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
@@ -19,9 +17,8 @@ beforeEach(function () {
     $this->service = app(LampiranService::class);
 });
 
-// 1. simpan(image) -> file ada, record dibuat, job ter-dispatch
-it('simpan gambar: file di disk privat, record dibuat, ProsesLampiran ter-dispatch', function () {
-    Bus::fake();
+// 1. simpan(image) -> file ada & SUDAH terkompres (lebar <=1280, jpeg)
+it('simpan gambar: file di disk privat sudah terkompres sinkron (lebar <=1280, jpeg)', function () {
     $t = TransaksiKas::factory()->create();
     $file = UploadedFile::fake()->image('nota.jpg', 2000, 1500);
 
@@ -33,12 +30,14 @@ it('simpan gambar: file di disk privat, record dibuat, ProsesLampiran ter-dispat
         ->and($lampiran->nama_file)->toBe('nota.jpg')
         ->and($lampiran->kategori)->toBe(KategoriLampiran::FotoBarang)
         ->and($lampiran->path)->toStartWith('lampiran/');
-    Bus::assertDispatched(ProsesLampiran::class);
+
+    // Kompresi sinkron: file di disk sudah dikecilkan.
+    $img = (new ImageManager(new Driver))->decode(Storage::disk('privat')->get($lampiran->path));
+    expect($img->width())->toBeLessThanOrEqual(1280);
 });
 
-// 2. simpan(PDF) -> file ada, record dibuat, job TIDAK dispatch
-it('simpan PDF: file ada, record dibuat, job TIDAK ter-dispatch (pass-through)', function () {
-    Bus::fake();
+// 2. simpan(PDF) -> file ada apa adanya (pass-through)
+it('simpan PDF: file ada apa adanya (pass-through, tanpa kompresi)', function () {
     $t = TransaksiKas::factory()->create();
     $file = UploadedFile::fake()->create('kuitansi.pdf', 100, 'application/pdf');
 
@@ -46,21 +45,6 @@ it('simpan PDF: file ada, record dibuat, job TIDAK ter-dispatch (pass-through)',
 
     Storage::disk('privat')->assertExists($lampiran->path);
     expect($lampiran->mime)->toBe('application/pdf');
-    Bus::assertNotDispatched(ProsesLampiran::class);
-});
-
-// 3. ProsesLampiran: gambar dikecilkan <=1280 + jpeg; (PDF tak akan sampai sini)
-it('ProsesLampiran mengecilkan gambar lebar maksimum 1280 dan meng-encode jpeg', function () {
-    $t = TransaksiKas::factory()->create();
-    $file = UploadedFile::fake()->image('besar.jpg', 3000, 2000);
-    $lampiran = $this->service->simpan($t, $file, KategoriLampiran::FotoBarang);
-
-    (new ProsesLampiran($lampiran->id))->handle();
-
-    $isi = Storage::disk('privat')->get($lampiran->path);
-    $img = (new ImageManager(new Driver))->decode($isi);
-
-    expect($img->width())->toBeLessThanOrEqual(1280);
 });
 
 // 4. hapus(): soft-delete record, file fisik TETAP ada

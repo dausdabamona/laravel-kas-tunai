@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\KategoriLampiran;
-use App\Jobs\ProsesLampiran;
 use App\Models\Lampiran;
 use App\Models\TransaksiKas;
 use Illuminate\Database\Eloquent\Model;
@@ -11,39 +10,40 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Encoders\JpegEncoder;
+use Intervention\Image\ImageManager;
 use ZipArchive;
 
 class LampiranService
 {
     /**
-     * Simpan file mentah ke disk privat + buat record Lampiran.
+     * Simpan file ke disk privat + buat record Lampiran.
      *
-     * File gambar didispatch ke ProsesLampiran (kompresi queue). PDF/non-gambar
-     * pass-through (tidak dikompresi). attachable = transaksi atau nota.
+     * Gambar dikompres SINKRON sebelum disimpan (lebar maks 1280, JPEG q70) —
+     * tak ada job/queue. PDF/non-gambar pass-through. attachable = transaksi/nota.
      */
     public function simpan(Model $attachable, UploadedFile $file, KategoriLampiran $kategori, array $meta = []): Lampiran
     {
         $ext = $file->getClientOriginalExtension() ?: $file->guessExtension();
         $path = sprintf('lampiran/%s/%s/%s.%s', now()->year, $kategori->value, Str::ulid(), $ext);
+        $mime = $file->getMimeType() ?? $file->getClientMimeType();
 
-        // Simpan file MENTAH dulu (kompresi gambar menyusul di queue).
-        Storage::disk('privat')->put($path, $file->get());
+        $isi = str_starts_with((string) $mime, 'image/')
+            ? $this->kompresGambar($file->get())   // kompres sinkron
+            : $file->get();                          // PDF/non-gambar pass-through
 
-        $lampiran = $attachable->lampiran()->create([
+        Storage::disk('privat')->put($path, $isi);
+
+        return $attachable->lampiran()->create([
             'kategori' => $kategori,
             'urutan' => $this->urutanBerikutnya($attachable),
             'disk' => 'privat',
             'path' => $path,
             'nama_file' => $file->getClientOriginalName(),
-            'mime' => $file->getMimeType() ?? $file->getClientMimeType(),
+            'mime' => $mime,
             'meta' => $meta ?: null,
         ]);
-
-        if (str_starts_with((string) $lampiran->mime, 'image/')) {
-            ProsesLampiran::dispatch($lampiran->id);
-        }
-
-        return $lampiran;
     }
 
     /**
@@ -112,6 +112,18 @@ class LampiranService
             now()->addMinutes(10),
             ['transaksi' => $t->id],
         );
+    }
+
+    /**
+     * Kompresi gambar sinkron: kecilkan ke lebar maks 1280, encode JPEG q70.
+     * Intervention v4 (decode/encode, terverifikasi sejak 2.4).
+     */
+    private function kompresGambar(string $contents): string
+    {
+        $img = (new ImageManager(new Driver))->decode($contents);
+        $img->scaleDown(width: 1280);
+
+        return (string) $img->encode(new JpegEncoder(quality: 70));
     }
 
     private function urutanBerikutnya(Model $attachable): int

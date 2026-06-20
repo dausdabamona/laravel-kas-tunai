@@ -2,12 +2,10 @@
 
 use App\Enums\KategoriLampiran;
 use App\Enums\Role;
-use App\Jobs\ProsesLampiran;
 use App\Models\TransaksiKas;
 use App\Models\User;
 use App\Services\LampiranService;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -15,25 +13,24 @@ beforeEach(function () {
     $this->service = app(LampiranService::class);
 });
 
-// 1. upload bukti image -> BUKTI_PD + job
-it('upload bukti gambar: Lampiran BUKTI_PD, job kompresi ter-dispatch', function () {
-    Bus::fake();
+// 1. upload bukti image -> BUKTI_PD (terkompres sinkron)
+it('upload bukti gambar: Lampiran BUKTI_PD tersimpan', function () {
     $t = TransaksiKas::factory()->create();
 
     $l = $this->service->simpan($t, UploadedFile::fake()->image('tiket.jpg'), KategoriLampiran::BuktiPd);
 
     expect($l->kategori)->toBe(KategoriLampiran::BuktiPd);
-    Bus::assertDispatched(ProsesLampiran::class);
+    Storage::disk('privat')->assertExists($l->path);
 });
 
 // 2. upload bukti PDF -> pass-through
-it('upload bukti PDF: tanpa job (pass-through)', function () {
-    Bus::fake();
+it('upload bukti PDF: pass-through tersimpan', function () {
     $t = TransaksiKas::factory()->create();
 
-    $this->service->simpan($t, UploadedFile::fake()->create('boarding.pdf', 50, 'application/pdf'), KategoriLampiran::BuktiPd);
+    $l = $this->service->simpan($t, UploadedFile::fake()->create('boarding.pdf', 50, 'application/pdf'), KategoriLampiran::BuktiPd);
 
-    Bus::assertNotDispatched(ProsesLampiran::class);
+    expect($l->mime)->toBe('application/pdf');
+    Storage::disk('privat')->assertExists($l->path);
 });
 
 // 3. zipBukti hanya bukti AKTIF, entri bernama jelas
