@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MultiNota;
+use App\Models\TransaksiKas;
 use App\Services\PajakService;
 use Illuminate\View\View;
 
@@ -27,6 +28,35 @@ class CetakPajakController extends Controller
         $this->authorize('lihat-laporan');
 
         return view('cetak.pajak.ssp-ppn', $this->dataPajak($nota));
+    }
+
+    public function kuitansi(MultiNota $nota): View
+    {
+        $this->authorize('lihat-laporan');
+
+        return view('cetak.pajak.kuitansi', ['nota' => $nota]);
+    }
+
+    public function spj(TransaksiKas $transaksi): View
+    {
+        $this->authorize('lihat-laporan');
+
+        $nota = $transaksi->nota()->orderBy('urutan')->get();
+        $pajak = $nota->map(fn (MultiNota $n) => [
+            'nota' => $n,
+            'hitung' => $this->pajak->hitung(
+                $n->nominal,
+                $this->pajak->klasifikasi($transaksi->kegiatan),
+                filled($n->npwp_penyedia),
+            ),
+        ]);
+
+        return view('cetak.pajak.spj', [
+            'transaksi' => $transaksi,
+            'daftarNota' => $nota,
+            'totalNota' => (int) $transaksi->nota()->sum('nominal'),
+            'pajak' => $pajak,
+        ]);
     }
 
     /**

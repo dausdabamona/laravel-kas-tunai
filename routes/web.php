@@ -38,6 +38,8 @@ Route::get('/transaksi/{transaksi}/bukti-zip', [LampiranController::class, 'zipB
 Route::middleware('auth')->prefix('cetak/pajak')->name('cetak.pajak.')->group(function () {
     Route::get('ssp-pph/{nota}', [CetakPajakController::class, 'sspPph'])->name('ssp-pph');
     Route::get('ssp-ppn/{nota}', [CetakPajakController::class, 'sspPpn'])->name('ssp-ppn');
+    Route::get('kuitansi/{nota}', [CetakPajakController::class, 'kuitansi'])->name('kuitansi');
+    Route::get('spj/{transaksi}', [CetakPajakController::class, 'spj'])->name('spj');
 });
 
 // ── Cetak Perjalanan Dinas (Blade + window.print) ────────────────────────────
