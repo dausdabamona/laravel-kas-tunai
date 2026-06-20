@@ -34,5 +34,8 @@ class DatabaseSeeder extends Seeder
                 ],
             );
         }
+
+        // Data contoh bisnis (ramping & deterministik) untuk uji coba semua menu.
+        $this->call(DummyDataSeeder::class);
     }
 }

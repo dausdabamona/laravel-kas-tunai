@@ -60,7 +60,7 @@
                                 <tr>
                                     <td class="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{{ $st->nomor_surat }}</td>
                                     <td class="px-3 py-2">{{ $st->tempat_tujuan }}</td>
-                                    <td class="whitespace-nowrap px-3 py-2">{{ $st->tgl_berangkat->format('d-m-Y') }} s.d. {{ $st->tgl_kembali->format('d-m-Y') }}</td>
+                                    <td class="whitespace-nowrap px-3 py-2">{{ $st->tgl_berangkat->translatedFormat('d M Y') }} s.d. {{ $st->tgl_kembali->translatedFormat('d M Y') }}</td>
                                     <td class="whitespace-nowrap px-3 py-2 text-right text-slate-700">Rp {{ number_format($st->biaya_total, 0, ',', '.') }}</td>
                                     <td class="whitespace-nowrap px-3 py-2 text-center">
                                         <a href="{{ route('cetak.pd.surat-tugas', $st) }}" class="text-teal-600 hover:underline">Surat Tugas</a>
@@ -100,7 +100,7 @@
                         <tbody class="divide-y divide-slate-100 bg-white">
                             @forelse ($recentTransaksi as $trx)
                                 <tr>
-                                    <td class="whitespace-nowrap px-3 py-2">{{ $trx->tanggal->format('d-m-Y') }}</td>
+                                    <td class="whitespace-nowrap px-3 py-2">{{ $trx->tanggal->translatedFormat('d M Y') }}</td>
                                     <td class="px-3 py-2">{{ $trx->kegiatan }}</td>
                                     <td class="whitespace-nowrap px-3 py-2">{{ $trx->sumber->label() }}</td>
                                     <td class="whitespace-nowrap px-3 py-2 text-right text-teal-700">

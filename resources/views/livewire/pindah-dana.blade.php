@@ -26,15 +26,13 @@
 
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700">Nominal (Rp) <span class="text-red-500">*</span></label>
-            <input wire:model="nominal" type="number" min="1"
-                class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
+            <x-rupiah-input model="nominal" />
             @error('nominal') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
         </div>
 
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700">Tanggal <span class="text-red-500">*</span></label>
-            <input wire:model="tanggal" type="date"
-                class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
+            <x-date-input model="tanggal" :value="$tanggal" />
             @error('tanggal') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
         </div>
 

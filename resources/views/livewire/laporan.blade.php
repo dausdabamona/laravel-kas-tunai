@@ -4,11 +4,11 @@
     <div class="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div>
             <label class="mb-1 block text-xs font-medium text-slate-600">Dari Tanggal</label>
-            <input wire:model.live="dari" type="date" class="rounded-lg border-slate-300 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
+            <x-date-input model="dari" :value="$dari" live />
         </div>
         <div>
             <label class="mb-1 block text-xs font-medium text-slate-600">Sampai Tanggal</label>
-            <input wire:model.live="sampai" type="date" class="rounded-lg border-slate-300 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
+            <x-date-input model="sampai" :value="$sampai" live />
         </div>
         <a href="{{ route('laporan.lpj', ['dari' => $dari, 'sampai' => $sampai]) }}" target="_blank"
             class="inline-flex min-h-[44px] items-center rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">

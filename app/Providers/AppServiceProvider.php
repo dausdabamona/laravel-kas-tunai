@@ -6,7 +6,10 @@ use App\Enums\Role;
 use App\Models\Lampiran;
 use App\Models\MultiNota;
 use App\Models\Pengembalian;
+use App\Models\RincianPd;
 use App\Models\SuratTugas;
+use App\Models\Tambahan;
+use App\Models\UangMukaPd;
 use App\Models\TransaksiKas;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -31,6 +34,9 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->registerGates();
 
+        // Tanggal tampil & cetak dalam Bahasa Indonesia (mis. "20 Juni 2026").
+        \Illuminate\Support\Carbon::setLocale('id');
+
         // Peta morph: simpan ALIAS pendek di DB, bukan FQCN. enforceMorphMap
         // melempar bila ada model morphable tak terpetakan — termasuk subjek
         // activitylog (transaksi/nota/lampiran) DAN causer (user) — sehingga
@@ -40,7 +46,10 @@ class AppServiceProvider extends ServiceProvider
             'nota' => MultiNota::class,
             'lampiran' => Lampiran::class,
             'pengembalian' => Pengembalian::class,
+            'tambahan' => Tambahan::class,
             'suratTugas' => SuratTugas::class,
+            'rincianPd' => RincianPd::class,
+            'uangMukaPd' => UangMukaPd::class,
             'user' => User::class,
         ]);
 

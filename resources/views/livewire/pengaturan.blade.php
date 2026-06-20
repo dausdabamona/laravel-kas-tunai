@@ -9,8 +9,7 @@
 
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700">Terkunci Hingga Tanggal</label>
-            <input wire:model="periodeTerkunciHingga" type="date"
-                class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
+            <x-date-input model="periodeTerkunciHingga" :value="$periodeTerkunciHingga" />
             @error('periodeTerkunciHingga') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
             <p class="mt-1 text-xs text-slate-400">Kosongkan untuk membuka semua periode.</p>
         </div>
