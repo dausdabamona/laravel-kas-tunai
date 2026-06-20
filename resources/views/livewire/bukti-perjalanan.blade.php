@@ -1,7 +1,7 @@
 <div class="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
 
     <div class="flex items-center justify-between">
-        <h3 class="text-sm font-semibold text-slate-700">Bukti Perjalanan Dinas</h3>
+        <h3 class="text-sm font-semibold text-slate-700">Bukti / Dokumen Pendukung</h3>
         @if ($urlZip)
             <a href="{{ $urlZip }}"
                 class="inline-flex min-h-[44px] items-center rounded-lg border border-teal-600 px-3 py-1.5 text-sm font-medium text-teal-700 hover:bg-teal-50">
@@ -20,6 +20,26 @@
             class="inline-flex min-h-[44px] items-center rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">
             Unggah
         </button>
+        <label class="inline-flex min-h-[44px] cursor-pointer items-center rounded-lg border border-teal-600 px-4 py-2 text-sm font-medium text-teal-700 hover:bg-teal-50">
+            <input type="file" accept="image/*" capture="environment" class="hidden"
+                wire:model="berkas" x-on:change.debounce.500ms="$wire.unggah()" />
+            📷 Kamera
+        </label>
+    </div>
+
+    {{-- Tempel screenshot (paste) --}}
+    <div tabindex="0"
+        x-on:paste="
+            for (const it of ($event.clipboardData?.items || [])) {
+                if (it.type.startsWith('image/')) {
+                    $event.preventDefault();
+                    $wire.upload('berkas', it.getAsFile(), () => $wire.unggah());
+                    break;
+                }
+            }
+        "
+        class="cursor-text rounded-lg border border-dashed border-slate-300 px-3 py-2 text-xs text-slate-400 focus:border-teal-500 focus:text-teal-600 focus:outline-none">
+        📋 Tempel screenshot di sini — klik lalu tekan Ctrl+V
     </div>
 
     <div class="flex flex-wrap gap-2">

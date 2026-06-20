@@ -49,15 +49,33 @@ it('cetak surat tugas: memuat nomor surat & daftar pegawai', function () {
         ->assertSee('Budi Santoso');
 });
 
-// 2. Rincian Biaya
-it('cetak rincian biaya: subtotal per pegawai & total benar', function () {
+// 2. Rincian Biaya — kini PER PEGAWAI (?pegawai=indeks); fallback dari JSON
+//    pegawai bila belum ada rincian_pd.
+it('cetak rincian biaya: dokumen per pegawai dengan total benar', function () {
     $st = buatSuratTugas();
 
-    $this->get(route('cetak.pd.rincian', $st))
+    // Pegawai 0 (Andi): 530.000*4 + 2.000.000 + 1.500.000 = 5.620.000
+    $this->get(route('cetak.pd.rincian', ['suratTugas' => $st->id, 'pegawai' => 0]))
         ->assertOk()
-        ->assertSee('5.620.000')   // Andi: 530.000*4 + 2.000.000 + 1.500.000
-        ->assertSee('4.000.000')   // Budi: 500.000*4 + 1.500.000 + 500.000
-        ->assertSee('9.620.000');  // total
+        ->assertSee('Andi Pratama')
+        ->assertSee('5.620.000');
+
+    // Pegawai 1 (Budi): 500.000*4 + 1.500.000 + 500.000 = 4.000.000
+    $this->get(route('cetak.pd.rincian', ['suratTugas' => $st->id, 'pegawai' => 1]))
+        ->assertOk()
+        ->assertSee('Budi Santoso')
+        ->assertSee('4.000.000');
+});
+
+// 2b. Kuitansi PD per pegawai
+it('cetak kuitansi PD: memuat nominal & penerima pegawai', function () {
+    $st = buatSuratTugas();
+
+    $this->get(route('cetak.pd.kuitansi', ['suratTugas' => $st->id, 'pegawai' => 0]))
+        ->assertOk()
+        ->assertSee('K U I T A N S I')
+        ->assertSee('Andi Pratama')
+        ->assertSee('5.620.000');
 });
 
 // 5. Kop & pejabat dari config/satker

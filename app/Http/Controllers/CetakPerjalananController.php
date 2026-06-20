@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\SuratTugas;
+use App\Services\RincianPdService;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
@@ -11,6 +13,8 @@ use Illuminate\View\View;
  */
 class CetakPerjalananController extends Controller
 {
+    public function __construct(private RincianPdService $rincianPd) {}
+
     public function suratTugas(SuratTugas $suratTugas): View
     {
         $this->authorize('lihat-laporan');
@@ -18,11 +22,34 @@ class CetakPerjalananController extends Controller
         return view('cetak.perjalanan.surat-tugas', ['st' => $suratTugas]);
     }
 
-    public function rincian(SuratTugas $suratTugas): View
+    /**
+     * Rincian Biaya PD per pegawai (?pegawai=indeks). Berbasis data rincian_pd;
+     * bila pegawai belum punya rincian, dokumen tampil kosong (silakan isi dulu).
+     */
+    public function rincian(SuratTugas $suratTugas, Request $request): View
     {
         $this->authorize('lihat-laporan');
 
-        return view('cetak.perjalanan.rincian', ['st' => $suratTugas]);
+        $idx = (int) $request->query('pegawai', 0);
+
+        return view('cetak.perjalanan.rincian', [
+            'st' => $suratTugas,
+            'pegawaiIndex' => $idx,
+            'data' => $this->rincianPd->ringkasPegawai($suratTugas, $idx),
+        ]);
+    }
+
+    public function kuitansi(SuratTugas $suratTugas, Request $request): View
+    {
+        $this->authorize('lihat-laporan');
+
+        $idx = (int) $request->query('pegawai', 0);
+
+        return view('cetak.perjalanan.kuitansi', [
+            'st' => $suratTugas,
+            'pegawaiIndex' => $idx,
+            'data' => $this->rincianPd->ringkasPegawai($suratTugas, $idx),
+        ]);
     }
 
     public function spd(SuratTugas $suratTugas): View

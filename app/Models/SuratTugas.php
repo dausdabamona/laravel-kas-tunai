@@ -6,6 +6,7 @@ use App\Models\Concerns\Auditable;
 use App\Models\Concerns\HasMicrosecondTimestamps;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Surat Tugas / Perjalanan Dinas.
@@ -22,6 +23,7 @@ class SuratTugas extends Model
     protected $fillable = [
         'transaksi_id',
         'nomor_surat',
+        'tanggal_surat',
         'dasar',
         'maksud',
         'angkutan',
@@ -44,6 +46,7 @@ class SuratTugas extends Model
     protected function casts(): array
     {
         return [
+            'tanggal_surat' => 'date',
             'tgl_berangkat' => 'date',
             'tgl_kembali' => 'date',
             'lama_hari' => 'integer',
@@ -55,5 +58,15 @@ class SuratTugas extends Model
     public function transaksi(): BelongsTo
     {
         return $this->belongsTo(TransaksiKas::class, 'transaksi_id');
+    }
+
+    public function rincian(): HasMany
+    {
+        return $this->hasMany(RincianPd::class, 'surat_tugas_id');
+    }
+
+    public function uangMuka(): HasMany
+    {
+        return $this->hasMany(UangMukaPd::class, 'surat_tugas_id');
     }
 }
