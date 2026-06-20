@@ -3,6 +3,7 @@
 use App\Http\Controllers\CetakPajakController;
 use App\Http\Controllers\CetakPerjalananController;
 use App\Http\Controllers\LampiranController;
+use App\Http\Controllers\LaporanController;
 use App\Models\TransaksiKas;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +34,12 @@ Route::get('/lampiran/{lampiran}/stream', [LampiranController::class, 'stream'])
 Route::get('/transaksi/{transaksi}/bukti-zip', [LampiranController::class, 'zipBukti'])
     ->middleware(['auth', 'signed'])
     ->name('lampiran.bukti-zip');
+
+// ── Laporan (BKU/LPJ) ────────────────────────────────────────────────────────
+Route::middleware('auth')->prefix('laporan')->name('laporan.')->group(function () {
+    Route::get('bku/{sumber}', [LaporanController::class, 'bku'])->name('bku');
+    Route::get('lpj', [LaporanController::class, 'lpj'])->name('lpj');
+});
 
 // ── Cetak Pajak (SSP/Kuitansi/SPJ) ───────────────────────────────────────────
 Route::middleware('auth')->prefix('cetak/pajak')->name('cetak.pajak.')->group(function () {
