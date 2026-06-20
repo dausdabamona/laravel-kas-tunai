@@ -1,6 +1,11 @@
 <?php
 
+use App\Models\MultiNota;
+use App\Models\TransaksiKas;
 use App\Services\PajakService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->pajak = app(PajakService::class);
@@ -85,6 +90,45 @@ it('PPh 21 honor: manual=true, pph=0', function () {
     expect($r['manual'])->toBeTrue()
         ->and($r['pph'])->toBe(0)
         ->and($r['jenis_pph'])->toBe('PPh Pasal 21');
+});
+
+// 7b. Override kategori per nota
+it('kategoriUntukNota: override manual menang atas klasifikasi otomatis kegiatan', function () {
+    // Kegiatan "BBM solar" => otomatis bebas pajak; tapi nota dipaksa ke kategori ATK (PPh 22).
+    $transaksi = TransaksiKas::factory()->create(['kegiatan' => 'Belanja BBM solar']);
+    $nota = MultiNota::factory()->create([
+        'transaksi_id' => $transaksi->id,
+        'kategori_pajak' => 'ATK / Alat Tulis',
+    ]);
+
+    expect($this->pajak->kategoriUntukNota($nota)['jenis_pph'])->toBe('PPh Pasal 22');
+});
+
+it('kategoriUntukNota: kategori_pajak kosong jatuh ke klasifikasi otomatis kegiatan', function () {
+    $transaksi = TransaksiKas::factory()->create(['kegiatan' => 'jasa cleaning gedung']);
+    $nota = MultiNota::factory()->create([
+        'transaksi_id' => $transaksi->id,
+        'kategori_pajak' => null,
+    ]);
+
+    expect($this->pajak->kategoriUntukNota($nota)['jenis_pph'])->toBe('PPh Pasal 23');
+});
+
+it('kategoriUntukNota: label tak dikenal jatuh ke otomatis (tahan banting)', function () {
+    $transaksi = TransaksiKas::factory()->create(['kegiatan' => 'beli ATK kantor']);
+    $nota = MultiNota::factory()->create([
+        'transaksi_id' => $transaksi->id,
+        'kategori_pajak' => 'Kategori Sudah Dihapus',
+    ]);
+
+    expect($this->pajak->kategoriUntukNota($nota)['jenis_pph'])->toBe('PPh Pasal 22');
+});
+
+it('daftarLabel memuat kategori config + default di akhir', function () {
+    $label = $this->pajak->daftarLabel();
+
+    expect($label)->toContain('ATK / Alat Tulis')
+        ->and($label[count($label) - 1])->toBe(config('pajak.default')['label']);
 });
 
 // 8. Bebas + MAP/KJS

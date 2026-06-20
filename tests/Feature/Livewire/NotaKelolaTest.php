@@ -113,27 +113,47 @@ it('upload foto nota dengan lat/lng membuat Lampiran FOTO_NOTA bermeta GPS', fun
         ->and($lamp->meta['lng'])->toBe(131.2541);
 });
 
-// 7
-it('upload foto barang membuat Lampiran FOTO_BARANG terhubung ke transaksi', function () {
+// 6b — salah upload bisa dihapus
+it('hapus foto: foto nota yang salah unggah dapat dihapus (soft-delete)', function () {
     $t = TransaksiKas::factory()->create();
+    $nota = MultiNota::factory()->create(['transaksi_id' => $t->id]);
+
+    $component = Livewire::test(Kelola::class, ['transaksi' => $t])
+        ->set('fotoNota', UploadedFile::fake()->image('salah.jpg'))
+        ->call('simpanFotoNota', $nota->id);
+
+    $foto = $nota->lampiran()->first();
+    expect($foto)->not->toBeNull();
+
+    $component->call('hapusFoto', $foto->id);
+
+    expect($nota->lampiran()->count())->toBe(0);
+});
+
+// 7 — foto barang BERPASANGAN dengan nota (menempel ke nota, bukan transaksi)
+it('upload foto barang membuat Lampiran FOTO_BARANG menempel ke NOTA (berpasangan)', function () {
+    $t = TransaksiKas::factory()->create();
+    $nota = MultiNota::factory()->create(['transaksi_id' => $t->id]);
 
     Livewire::test(Kelola::class, ['transaksi' => $t])
         ->set('fotoBarang', UploadedFile::fake()->image('barang.jpg'))
-        ->call('simpanFotoBarang')
+        ->call('simpanFotoBarang', $nota->id)
         ->assertHasNoErrors();
 
-    $lamp = $t->lampiran()->first();
+    $lamp = $nota->lampiran()->first();
     expect($lamp)->not->toBeNull()
-        ->and($lamp->kategori)->toBe(KategoriLampiran::FotoBarang);
+        ->and($lamp->kategori)->toBe(KategoriLampiran::FotoBarang)
+        ->and($t->lampiran()->count())->toBe(0); // tidak lagi di level transaksi
 });
 
 // 8
 it('preview foto memakai URL signed (route lampiran.stream bertanda), bukan path mentah', function () {
     $t = TransaksiKas::factory()->create();
+    $nota = MultiNota::factory()->create(['transaksi_id' => $t->id]);
 
     Livewire::test(Kelola::class, ['transaksi' => $t])
         ->set('fotoBarang', UploadedFile::fake()->image('barang.jpg'))
-        ->call('simpanFotoBarang')
+        ->call('simpanFotoBarang', $nota->id)
         ->assertSee('/lampiran/')
         ->assertSee('signature=');
 });

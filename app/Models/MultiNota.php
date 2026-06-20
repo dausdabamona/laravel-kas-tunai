@@ -33,6 +33,7 @@ class MultiNota extends Model
         'nominal',
         'npwp_penyedia',
         'alamat_penyedia',
+        'kategori_pajak',
         'tgl_nota',
         'penyedia_id',
     ];

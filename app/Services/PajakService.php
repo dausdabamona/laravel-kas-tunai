@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\MultiNota;
+
 /**
  * Engine pajak bendahara — data-driven dari config/pajak.php.
  *
@@ -29,6 +31,52 @@ class PajakService
         }
 
         return config('pajak.default');
+    }
+
+    /**
+     * Daftar label kategori untuk dropdown (label dipakai sbg nilai tersimpan
+     * di multi_nota.kategori_pajak). Termasuk kategori default di akhir.
+     *
+     * @return list<string>
+     */
+    public function daftarLabel(): array
+    {
+        $label = array_map(fn ($k) => $k['label'], config('pajak.kategori'));
+        $label[] = config('pajak.default')['label'];
+
+        return $label;
+    }
+
+    /**
+     * Ambil entri kategori berdasarkan label tersimpan; null bila tak dikenal
+     * (mis. label config berubah) sehingga pemanggil bisa jatuh ke otomatis.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function kategoriByLabel(string $label): ?array
+    {
+        foreach (config('pajak.kategori') as $kategori) {
+            if ($kategori['label'] === $label) {
+                return $kategori;
+            }
+        }
+
+        return config('pajak.default')['label'] === $label ? config('pajak.default') : null;
+    }
+
+    /**
+     * Kategori efektif satu nota: override manual (kategori_pajak) bila terisi &
+     * dikenal, selain itu klasifikasi otomatis dari uraian kegiatan transaksi.
+     *
+     * @return array<string, mixed>
+     */
+    public function kategoriUntukNota(MultiNota $nota): array
+    {
+        if (filled($nota->kategori_pajak) && ($k = $this->kategoriByLabel($nota->kategori_pajak)) !== null) {
+            return $k;
+        }
+
+        return $this->klasifikasi($nota->transaksi?->kegiatan ?? '');
     }
 
     /**

@@ -47,7 +47,95 @@
         </tbody>
     </table>
 
-    <table class="ttd">
+    {{-- Rekonsiliasi uang muka + rincian pengembalian/penambahan --}}
+    <h3 style="font-size:12pt; margin:14px 0 4px;">Rekonsiliasi Uang Muka</h3>
+    <table class="kotak">
+        <tr><td style="width:60%">Uang Muka Diserahkan</td><td class="text-right">Rp {{ number_format($rekon['uang_muka'], 0, ',', '.') }}</td></tr>
+        <tr><td>Total Nota (pertanggungjawaban)</td><td class="text-right">Rp {{ number_format($rekon['total_nota'], 0, ',', '.') }}</td></tr>
+        <tr><td>Total Pengembalian (sisa dikembalikan)</td><td class="text-right">Rp {{ number_format($rekon['total_pengembalian'], 0, ',', '.') }}</td></tr>
+        <tr><td>Total Penambahan (kekurangan ditambah bendahara)</td><td class="text-right">Rp {{ number_format($rekon['total_tambahan'], 0, ',', '.') }}</td></tr>
+        <tr>
+            <th class="text-right">Selisih ({{ $rekon['status']->label() }})</th>
+            <th class="text-right">Rp {{ number_format(abs($rekon['selisih']), 0, ',', '.') }}</th>
+        </tr>
+    </table>
+
+    @if ($daftarPengembalian->isNotEmpty())
+        <p style="margin:10px 0 2px; font-weight:bold;">Rincian Pengembalian (sisa uang muka dikembalikan ke kas)</p>
+        <table class="kotak">
+            <thead><tr><th style="width:5%">No</th><th>Tanggal</th><th>Keterangan</th><th>Jumlah</th></tr></thead>
+            <tbody>
+                @foreach ($daftarPengembalian as $p)
+                    <tr>
+                        <td class="text-center">{{ $loop->iteration }}</td>
+                        <td>{{ $p->tanggal->translatedFormat('d F Y') }}</td>
+                        <td>{{ $p->keterangan ?: 'Pengembalian sisa belanja' }}</td>
+                        <td class="text-right">Rp {{ number_format($p->jumlah, 0, ',', '.') }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
+
+    @if ($daftarTambahan->isNotEmpty())
+        <p style="margin:10px 0 2px; font-weight:bold;">Rincian Penambahan (kekurangan dibayar bendahara)</p>
+        <table class="kotak">
+            <thead><tr><th style="width:5%">No</th><th>Tanggal</th><th>Keterangan</th><th>Jumlah</th></tr></thead>
+            <tbody>
+                @foreach ($daftarTambahan as $t)
+                    <tr>
+                        <td class="text-center">{{ $loop->iteration }}</td>
+                        <td>{{ $t->tanggal->translatedFormat('d F Y') }}</td>
+                        <td>{{ $t->keterangan ?: 'Penambahan kekurangan belanja' }}</td>
+                        <td class="text-right">Rp {{ number_format($t->jumlah, 0, ',', '.') }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
+
+    {{-- Lampiran bukti foto BERPASANGAN per nota (ditanam base64 utk Save-as-PDF) --}}
+    @php
+        $adaFoto = collect($fotoNota)->contains(fn ($c) => $c->isNotEmpty())
+            || collect($fotoBarang)->contains(fn ($c) => $c->isNotEmpty());
+    @endphp
+    @if ($adaFoto)
+        <h3 style="font-size:12pt; margin:16px 0 4px;">Lampiran Bukti Foto (Nota &amp; Barang)</h3>
+
+        @foreach ($daftarNota as $n)
+            @php
+                $fNota = $fotoNota[$n->id] ?? collect();
+                $fBarang = $fotoBarang[$n->id] ?? collect();
+            @endphp
+            @if ($fNota->isNotEmpty() || $fBarang->isNotEmpty())
+                <p style="margin:10px 0 2px; font-weight:bold;">{{ $n->urutan }}. {{ $n->nama_penyedia }} — Rp {{ number_format($n->nominal, 0, ',', '.') }}</p>
+                <table style="width:100%; page-break-inside:avoid;"><tr>
+                    <td style="width:50%; vertical-align:top;">
+                        <span style="font-size:10pt;">Foto Nota:</span><br>
+                        @foreach ($fNota as $f)
+                            @php $uri = $dataUri($f); @endphp
+                            @if ($uri)
+                                <img src="{{ $uri }}" style="max-width:46%; max-height:200px; margin:3px; border:1px solid #999; vertical-align:top;" alt="nota" />
+                            @endif
+                        @endforeach
+                        @if ($fNota->isEmpty()) <span style="color:#999; font-size:10pt;">—</span> @endif
+                    </td>
+                    <td style="width:50%; vertical-align:top;">
+                        <span style="font-size:10pt;">Foto Barang:</span><br>
+                        @foreach ($fBarang as $f)
+                            @php $uri = $dataUri($f); @endphp
+                            @if ($uri)
+                                <img src="{{ $uri }}" style="max-width:46%; max-height:200px; margin:3px; border:1px solid #999; vertical-align:top;" alt="barang" />
+                            @endif
+                        @endforeach
+                        @if ($fBarang->isEmpty()) <span style="color:#999; font-size:10pt;">—</span> @endif
+                    </td>
+                </tr></table>
+            @endif
+        @endforeach
+    @endif
+
+    <table class="ttd" style="page-break-inside:avoid;">
         <tr>
             <td style="width:55%">
                 Mengetahui,<br>
