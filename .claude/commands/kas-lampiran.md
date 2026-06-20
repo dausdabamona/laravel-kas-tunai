@@ -1,5 +1,5 @@
 ---
-description: "Prime konteks Phase 2 — Nota, lampiran polymorphic, storage privat, kompresi queue"
+description: "Prime konteks Phase 2 — Nota, lampiran polymorphic, storage privat, kompresi sinkron"
 ---
 
 # /kas-lampiran — Phase 2: Nota & Lampiran
@@ -11,8 +11,11 @@ SaldoService, TransaksiKasPolicy, dibuat_oleh).
 ## Tujuan
 Lampiran bukti ke transaksi: rincian **multi_nota** (banyak penyedia per
 transaksi), **lampiran polymorphic** (nempel ke transaksi & nota), **storage
-privat + signed URL**, dan **kompresi gambar via queue**. `status_spj`
-dihitung ulang oleh `NotaService::recalc` saat nota berubah.
+privat + signed URL**, dan **kompresi sinkron di `LampiranService::simpan()`
+(Intervention v4)**. `status_spj` dihitung ulang oleh `NotaService::recalc` saat
+nota berubah.
+
+> Catatan: Job ProsesLampiran dihapus di S1 — kompresi sinkron.
 
 ## Keputusan terkunci (jangan dilanggar tanpa konfirmasi)
 1. **Cache minimal.** `nota_jml`/`nota_total` TIDAK jadi kolom — dihitung via
@@ -24,8 +27,9 @@ dihitung ulang oleh `NotaService::recalc` saat nota berubah.
    isi method jadi `$t->pengembalian()->sum(...)`; signature `recalc` & seluruh
    pemanggil tak tersentuh, dan 2.2 hijau tanpa artefak Phase 3 (tabel/relasi
    pengembalian belum ada di Phase 2).
-3. **Kompresi server-side via queue** (Intervention Image), **PDF pass-through**.
-   Satu jalur file. (Flip ke klien hanya bila bandwidth wifi jadi masalah nyata.)
+3. **Kompresi sinkron di `LampiranService::simpan()` (Intervention v4)**,
+   **PDF pass-through**. Satu jalur file. (Flip ke klien hanya bila bandwidth
+   wifi jadi masalah nyata.)
 
 ## Skema tabel (sumber kebenaran)
 
@@ -79,16 +83,18 @@ mobile-first (tap ≥44px).
 - Daftarkan `Relation::enforceMorphMap(['transaksi'=>TransaksiKas, 'nota'=>MultiNota])`.
 - **DoD**: lampiran nempel ke 2 tipe induk; meta JSON bolak-balik; soft-delete.
 
-### 2.4 — LampiranService + storage privat + kompresi queue
+### 2.4 — LampiranService + storage privat + kompresi sinkron
 - `composer require intervention/image` (BELUM terpasang — install dulu).
 - Disk privat (`config/filesystems.php` disk `privat`, visibility private).
 - `LampiranService::simpan(Model $induk, UploadedFile $file, string $kategori,
-  array $meta=[])`: simpan ke disk privat → row lampiran → dispatch
-  `KompresiGambar` (queue). PDF/non-gambar = pass-through (skip kompresi).
-- `urlSementara(Lampiran): string` = `Storage::disk('privat')->temporaryUrl(...)`.
-- Job `KompresiGambar`: resize/encode kualitas, timpa file, update meta.
-- **DoD** (pakai `Storage::fake('privat')`, `Queue::fake`, `Bus::fake`): file di
-  disk privat; signed/temporary URL; PDF pass-through; job kompresi ter-dispatch.
+  array $meta=[])`: kompresi sinkron via `kompresGambar()` (gambar) lalu simpan
+  ke disk privat → row lampiran. PDF/non-gambar = pass-through (skip kompresi).
+- `urlSementara(Lampiran): string` = signed route (driver local tak dukung
+  `Storage::temporaryUrl()`).
+- `kompresGambar(string $contents): string`: Intervention v4 decode → scaleDown
+  1280 → encode JpegEncoder 70.
+- **DoD** (pakai `Storage::fake('privat')`): file di disk privat sudah terkompres
+  (lebar ≤ 1280); signed URL; PDF pass-through.
 
 ### 2.5 — Livewire kelola nota & foto
 - Komponen `Transaksi/KelolaNota` (tipis): tambah/hapus nota → `NotaService` →

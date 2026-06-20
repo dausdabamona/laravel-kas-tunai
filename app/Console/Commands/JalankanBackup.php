@@ -60,10 +60,13 @@ class JalankanBackup extends Command
 
         if ($driver === 'mysql') {
             $cfg = config("database.connections.{$conn}");
-            $proc = new Process([
-                'mysqldump', '-h', (string) $cfg['host'], '-P', (string) $cfg['port'],
-                '-u', (string) $cfg['username'], '-p'.(string) $cfg['password'], (string) $cfg['database'],
-            ]);
+            // Password via env MYSQL_PWD, BUKAN argumen CLI (terlihat di `ps`).
+            $proc = new Process(
+                ['mysqldump', '-h', (string) $cfg['host'], '-P', (string) $cfg['port'],
+                    '-u', (string) $cfg['username'], (string) $cfg['database']],
+                null,
+                ['MYSQL_PWD' => (string) $cfg['password']],
+            );
             $proc->run();
             if ($proc->isSuccessful()) {
                 $zip->addFromString('database.sql', $proc->getOutput());
@@ -75,8 +78,9 @@ class JalankanBackup extends Command
     {
         $privat = Storage::disk('privat');
 
+        // addFile(path) — hindari memuat tiap file ke memori (vs addFromString(get())).
         foreach ($privat->allFiles() as $file) {
-            $zip->addFromString('privat/'.$file, $privat->get($file));
+            $zip->addFile($privat->path($file), 'privat/'.$file);
         }
     }
 
