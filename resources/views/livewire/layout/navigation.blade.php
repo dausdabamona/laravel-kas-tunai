@@ -29,9 +29,27 @@ new class extends Component
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                <div class="hidden flex-wrap items-center gap-6 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('transaksi-kas.index')" :active="request()->routeIs('transaksi-kas.*')" wire:navigate>
+                        {{ __('Buku Kas') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('perjalanan-dinas.index')" :active="request()->routeIs('perjalanan-dinas.*')" wire:navigate>
+                        {{ __('Perjalanan Dinas') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.index') || request()->routeIs('laporan.*')" wire:navigate>
+                        {{ __('Laporan') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('pindah-dana.index')" :active="request()->routeIs('pindah-dana.*')" wire:navigate>
+                        {{ __('Pindah Dana') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('impor-rek-koran.index')" :active="request()->routeIs('impor-rek-koran.*')" wire:navigate>
+                        {{ __('Impor Bank') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('pengaturan.index')" :active="request()->routeIs('pengaturan.*')" wire:navigate>
+                        {{ __('Pengaturan') }}
                     </x-nav-link>
                 </div>
             </div>
@@ -83,6 +101,24 @@ new class extends Component
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('transaksi-kas.index')" :active="request()->routeIs('transaksi-kas.*')" wire:navigate>
+                {{ __('Buku Kas') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('perjalanan-dinas.index')" :active="request()->routeIs('perjalanan-dinas.*')" wire:navigate>
+                {{ __('Perjalanan Dinas') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.index') || request()->routeIs('laporan.*')" wire:navigate>
+                {{ __('Laporan') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('pindah-dana.index')" :active="request()->routeIs('pindah-dana.*')" wire:navigate>
+                {{ __('Pindah Dana') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('impor-rek-koran.index')" :active="request()->routeIs('impor-rek-koran.*')" wire:navigate>
+                {{ __('Impor Bank') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('pengaturan.index')" :active="request()->routeIs('pengaturan.*')" wire:navigate>
+                {{ __('Pengaturan') }}
             </x-responsive-nav-link>
         </div>
 

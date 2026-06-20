@@ -3,7 +3,8 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "dev:app": "concurrently -n laravel,vite -c cyan,magenta \"C:/laragon/bin/php/php-8.3.30-Win32-vs16-x64/php.exe artisan serve --host=127.0.0.1 --port=8000\" \"npm run dev\""
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",
