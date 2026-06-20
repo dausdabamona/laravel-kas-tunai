@@ -126,4 +126,8 @@ return [
         'min_pph' => 0, 'min_ppn' => 0, 'catatan' => 'Tidak terklasifikasi - periksa manual',
     ],
 
+    // Kode billing setoran PPN (PPh sudah per-kategori di tiap entri di atas).
+    // CATATAN: verifikasi KJS PPN terhadap regulasi terkini sebelum produksi.
+    'ppn_ssp' => ['map' => '411211', 'kjs' => '920'],
+
 ];

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CetakPajakController;
 use App\Http\Controllers\CetakPerjalananController;
 use App\Http\Controllers\LampiranController;
 use App\Models\TransaksiKas;
@@ -32,6 +33,12 @@ Route::get('/lampiran/{lampiran}/stream', [LampiranController::class, 'stream'])
 Route::get('/transaksi/{transaksi}/bukti-zip', [LampiranController::class, 'zipBukti'])
     ->middleware(['auth', 'signed'])
     ->name('lampiran.bukti-zip');
+
+// ── Cetak Pajak (SSP/Kuitansi/SPJ) ───────────────────────────────────────────
+Route::middleware('auth')->prefix('cetak/pajak')->name('cetak.pajak.')->group(function () {
+    Route::get('ssp-pph/{nota}', [CetakPajakController::class, 'sspPph'])->name('ssp-pph');
+    Route::get('ssp-ppn/{nota}', [CetakPajakController::class, 'sspPpn'])->name('ssp-ppn');
+});
 
 // ── Cetak Perjalanan Dinas (Blade + window.print) ────────────────────────────
 Route::middleware('auth')->prefix('cetak/perjalanan/{suratTugas}')->name('cetak.pd.')->group(function () {
