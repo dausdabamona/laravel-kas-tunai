@@ -8,6 +8,7 @@ use App\Services\NotaService;
 use App\Support\Cascade;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
  * Pengembalian sebagian dana belanja (sisa dikembalikan ke kas).
@@ -72,5 +73,10 @@ class Pengembalian extends Model
     public function refMasuk(): BelongsTo
     {
         return $this->belongsTo(TransaksiKas::class, 'ref_masuk_id');
+    }
+
+    public function lampiran(): MorphMany
+    {
+        return $this->morphMany(Lampiran::class, 'attachable');
     }
 }

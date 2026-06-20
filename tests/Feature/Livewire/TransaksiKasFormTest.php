@@ -33,6 +33,38 @@ it('menyimpan transaksi baru dengan data valid', function () {
         ->and(TransaksiKas::first()->kegiatan)->toBe('Pembelian Alat Tulis Kantor');
 });
 
+it('jenis pengeluaran (belanja) menol-kan debet otomatis (cegah salah input)', function () {
+    Livewire::test(Form::class)
+        ->set('tanggal', '2026-06-19')
+        ->set('kegiatan', 'Belanja ATK')
+        ->set('sumber', Sumber::Tunai->value)
+        ->set('jenis', JenisTransaksi::Belanja->value)
+        ->set('debet', 999_999)   // salah isi — harus dinolkan
+        ->set('kredit', 500_000)
+        ->call('simpan')
+        ->assertDispatched('transaksi-tersimpan');
+
+    $trx = TransaksiKas::first();
+    expect($trx->debet)->toBe(0)
+        ->and($trx->kredit)->toBe(500_000);
+});
+
+it('jenis penerimaan (masuk) menol-kan kredit otomatis', function () {
+    Livewire::test(Form::class)
+        ->set('tanggal', '2026-06-19')
+        ->set('kegiatan', 'Penerimaan UP')
+        ->set('sumber', Sumber::Bank->value)
+        ->set('jenis', JenisTransaksi::Masuk->value)
+        ->set('kredit', 999_999)  // salah isi — harus dinolkan
+        ->set('debet', 700_000)
+        ->call('simpan')
+        ->assertDispatched('transaksi-tersimpan');
+
+    $trx = TransaksiKas::first();
+    expect($trx->kredit)->toBe(0)
+        ->and($trx->debet)->toBe(700_000);
+});
+
 it('menolak penyimpanan jika tanggal kosong', function () {
     Livewire::test(Form::class)
         ->set('kegiatan', 'Tanpa Tanggal')
@@ -86,7 +118,8 @@ it('memperbarui transaksi yang sudah ada saat mode edit', function () {
     Livewire::test(Form::class, ['transaksiId' => $trx->id])
         ->set('kegiatan', 'Kegiatan Baru Sudah Diperbarui')
         ->call('simpan')
-        ->assertDispatched('transaksi-tersimpan');
+        ->assertDispatched('transaksi-diperbarui') // panel sibling refresh tanpa reload
+        ->assertSet('tersimpan', true);
 
     expect($trx->fresh()->kegiatan)->toBe('Kegiatan Baru Sudah Diperbarui');
 });

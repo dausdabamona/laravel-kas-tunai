@@ -6,6 +6,8 @@ use App\Enums\JenisTransaksi;
 use App\Enums\StatusSpj;
 use App\Enums\Sumber;
 use App\Models\TransaksiKas;
+use App\Services\NotaService;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -45,6 +47,24 @@ class Form extends Component
     public int $nilai_spby = 0;
 
     public int $uang_diserahkan = 0;
+
+    public bool $tersimpan = false;
+
+    /** Arah baris mengikuti jenis: masuk/PD-bendahara/impor = debet, selebihnya kredit. */
+    public function arahDebet(): bool
+    {
+        return JenisTransaksi::tryFrom($this->jenis)?->arahDefault() === 'debet';
+    }
+
+    /** Saat jenis berganti, nol-kan kolom yang tidak relevan agar tak salah input. */
+    public function updatedJenis(): void
+    {
+        if ($this->arahDebet()) {
+            $this->kredit = 0;
+        } else {
+            $this->debet = 0;
+        }
+    }
 
     public function rules(): array
     {
@@ -95,11 +115,18 @@ class Form extends Component
         }
     }
 
-    public function simpan(): void
+    public function simpan(NotaService $nota): void
     {
         $trx = $this->transaksiId ? TransaksiKas::findOrFail($this->transaksiId) : null;
 
         $this->authorize($trx ? 'update' : 'create', $trx ?? TransaksiKas::class);
+
+        // Hanya satu kolom terisi sesuai jenis (hindari debet & kredit sekaligus).
+        if ($this->arahDebet()) {
+            $this->kredit = 0;
+        } else {
+            $this->debet = 0;
+        }
 
         $data = $this->validate();
 
@@ -112,9 +139,24 @@ class Form extends Component
 
         if ($trx) {
             $trx->update($data);
-        } else {
-            TransaksiKas::create($data);
+
+            // Hitung ulang status_spj: kredit/nilai_spby berubah -> target SPJ ikut
+            // berubah. recalc default hanya jalan saat nota berubah.
+            if ($trx->jenis === JenisTransaksi::Belanja) {
+                $nota->recalc($trx);
+                $this->status_spj = $trx->fresh()->status_spj->value;
+            }
+
+            // Beri tahu panel sibling (rekonsiliasi, nota) agar LANGSUNG memuat
+            // ulang nilai terbaru — tanpa reload halaman — sehingga cetak tanda
+            // terima & SPJ selalu memakai data terkini.
+            $this->dispatch('transaksi-diperbarui');
+            $this->tersimpan = true;
+
+            return;
         }
+
+        TransaksiKas::create($data);
 
         $this->dispatch('transaksi-tersimpan');
         $this->reset(['kegiatan', 'keterangan', 'penjab', 'debet', 'kredit', 'no_spby', 'tgl_spby', 'nilai_spby', 'uang_diserahkan']);
@@ -122,10 +164,27 @@ class Form extends Component
 
     public function render()
     {
+        $trx = $this->transaksiId ? TransaksiKas::find($this->transaksiId) : null;
+
+        $bolehUbah = $trx
+            ? Gate::allows('update', $trx)
+            : Gate::allows('create', TransaksiKas::class);
+
+        // Total nota/pengembalian/tambahan dari DB — basis pratinjau hitung LIVE.
+        // Selisih & status SPJ dihitung di sisi klien dari kredit/nilai_spby yang
+        // sedang diketik (lihat blade), jadi pengguna lihat hasil sebelum simpan.
+        $belanja = $trx && $trx->jenis === JenisTransaksi::Belanja;
+
         return view('livewire.transaksi-kas.form', [
             'sumberPilihan' => Sumber::cases(),
             'jenisPilihan' => JenisTransaksi::cases(),
             'statusSpjPilihan' => StatusSpj::cases(),
+            'bolehUbah' => $bolehUbah,
+            'arahDebet' => $this->arahDebet(),
+            'previewBelanja' => $belanja,
+            'previewNotaTotal' => $belanja ? (int) $trx->nota()->sum('nominal') : 0,
+            'previewPengembalian' => $belanja ? (int) $trx->pengembalian()->sum('jumlah') : 0,
+            'previewTambahan' => $belanja ? (int) $trx->tambahan()->sum('jumlah') : 0,
         ])->layout('layouts.app');
     }
 

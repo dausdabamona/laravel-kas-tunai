@@ -57,6 +57,24 @@ class LampiranService
     }
 
     /**
+     * Data URI base64 (mis. data:image/jpeg;base64,...) untuk MENANAM gambar
+     * langsung ke dokumen cetak (SPJ) — agar tampil di print/Save-as-PDF tanpa
+     * bergantung pada signed URL/sesi. Kembalikan null bila berkas hilang.
+     */
+    public function dataUri(Lampiran $lampiran): ?string
+    {
+        $disk = Storage::disk($lampiran->disk);
+
+        if (! $disk->exists($lampiran->path)) {
+            return null;
+        }
+
+        $mime = $lampiran->mime ?: 'image/jpeg';
+
+        return 'data:'.$mime.';base64,'.base64_encode($disk->get($lampiran->path));
+    }
+
+    /**
      * URL bertanda tangan & kedaluwarsa (10 menit) ke route stream privat.
      * Driver local tidak mendukung Storage::temporaryUrl(), jadi pakai signed route.
      */

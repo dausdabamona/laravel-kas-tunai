@@ -47,8 +47,8 @@
             @endforeach
         </select>
 
-        <input wire:model.live="filterDariTanggal" type="date" class="rounded-lg border-slate-300 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
-        <input wire:model.live="filterSampaiTanggal" type="date" class="rounded-lg border-slate-300 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
+        <div class="w-40"><x-date-input model="filterDariTanggal" :value="$filterDariTanggal" live /></div>
+        <div class="w-40"><x-date-input model="filterSampaiTanggal" :value="$filterSampaiTanggal" live /></div>
 
         <a href="{{ route('transaksi-kas.create') }}" class="inline-flex min-h-[44px] items-center gap-1 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500">
             + Tambah

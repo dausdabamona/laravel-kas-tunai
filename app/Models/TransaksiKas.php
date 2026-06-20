@@ -159,6 +159,11 @@ class TransaksiKas extends Model
         return $this->hasMany(Pengembalian::class, 'transaksi_id');
     }
 
+    public function tambahan(): HasMany
+    {
+        return $this->hasMany(Tambahan::class, 'transaksi_id');
+    }
+
     public function suratTugas(): HasOne
     {
         return $this->hasOne(SuratTugas::class, 'transaksi_id');
